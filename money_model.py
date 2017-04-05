@@ -3,7 +3,11 @@ from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 import random
 from mesa.datacollection import DataCollector
-#dev change
+<<<<<<< HEAD
+
+=======
+#master change
+>>>>>>> master
 def compute_gini(model):
     agent_wealths = [agent.wealth for agent in model.schedule.agents]
     x = sorted(agent_wealths)
