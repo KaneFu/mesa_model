@@ -44,7 +44,6 @@ var HistogramModule = function(bins, canvas_width, canvas_height) {
     // Create the chart object
     var chart = new Chart(context).Bar(data,options);
 
-
     // Now what?
     this.render = function(data) {
         for (var i in data)
