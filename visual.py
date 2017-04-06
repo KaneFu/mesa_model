@@ -1,8 +1,7 @@
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule,TextElement
 from mesa.visualization.ModularVisualization import ModularServer,VisualizationElement
-
-from money_model import MoneyModel
+from Wealth_model import WealthModel
 import numpy as np
 
 def agent_portrayal(agent):
@@ -20,8 +19,9 @@ def agent_portrayal(agent):
     return portrayal
 
 # grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
-chart = ChartModule([
-    {"Label": "Gini", "Color": "Black"}],
+chart = ChartModule(
+    [{"Label": "Gini", "Color": "Black"},{"Label": "Unemploy", "Color": "Red"}],
+    canvas_height=300,canvas_width = 400,
     data_collector_name='datacollector'
 )
 
@@ -42,8 +42,8 @@ class HistogramModule(VisualizationElement):
         self.js_code = "elements.push(" + new_element + ");"
 
     def render(self, model):
-        wealth_vals = [agent.wealth for agent in model.schedule.agents]
-        hist = np.histogram(wealth_vals, bins=self.bins)[0]
+        wealth_vals = [indi.s for indi in model.schedule.individuals]
+        hist = np.histogram(wealth_vals, bins=len(self.bins))[0]
         return [int(x) for x in hist]
 
 
@@ -62,7 +62,7 @@ class HistModule2(VisualizationElement):
         self.js_code = "elements.push(" + new_element + ");"
 
     def render(self, model):
-        wealth_vals = [agent.wealth for agent in model.schedule.agents]
+        wealth_vals = [indi.s+indi.f for indi in model.schedule.individuals]
         wealth_sum = float(np.sum(wealth_vals))
         vals_sort = np.sort(wealth_vals)  #small_ big
         val_ind = np.linspace(0,len(vals_sort),10,dtype=np.int32)
@@ -78,19 +78,19 @@ class TextModule(VisualizationElement):
 
     def render(self,model):
         step_num = 'step_num : %d,<br>' % model.schedule.steps
-        agent_num = 'agent_num: %d' % model.schedule.get_agent_count()
+        agent_num = 'agent_num: %d' % model.schedule.get_individual_count()
         return step_num+agent_num
 
 text = TextModule()
-histogram_element = HistogramModule(list(range(50)), 200, 500)
+histogram_element = HistogramModule(list(range(50)), 300, 400)
 pie_element = HistModule2(list(range(1,11)),300,300)
 # print(type(histogram_element))
 # model = MoneyModel(1000,100,100)
 # model.run_model()
-server = ModularServer(MoneyModel,
+server = ModularServer(WealthModel,
                        [chart,histogram_element,pie_element,text],
-                       "Money Model",
-                       1000, 10, 10)
+                       "Wealth Model",
+                       500, 10)
 
 server.port = 8521
 server.launch()

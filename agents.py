@@ -21,6 +21,7 @@ class Individual(Agent):
         self.contract = contract
         # self.employer = 
 
+####!!!!!!!!consume需要改
     def step(self):
         self.f_return = np.random.lognormal(self.model.y,self.model.square) - 1
         # self.f = self.f*(1+self.f_return)
@@ -28,7 +29,6 @@ class Individual(Agent):
         income = self.f_return*self.f + self.s*self.model.r_saving + self.w
         self.f = self.f*(1+self.f_return) + max(income-self.c,0)*self.ratio
         self.s = self.s*(1+self.model.r_saving)+max(income-self.c,0)*(1-self.ratio)
-
         self.s = self.s - min(self.c,self.s)
         self.f = max(self.f - max(self.c-self.s,0),0)  #银行自助补给
         #####
@@ -45,8 +45,8 @@ class Individual(Agent):
 
 class Firm(Agent):
     """ An agent with fixed initial wealth."""
-    def __init__(self, unique_id, model,price=100,sell_q=1000,supply=500,
-                yield_num=1000,wage=5000,asset=50000,debt=10000,debt_r=0.04/12,alpha=10,
+    def __init__(self, unique_id, model,price=500,sell_q=100,supply=0,
+                yield_num=200,wage=5000,asset=50000,debt=10000,debt_r=0.04/12,alpha=20,
                 sigma = 0.05):
         super().__init__(unique_id, model)
         self.staff = []
@@ -81,14 +81,14 @@ class Firm(Agent):
             self.A = 0.3*self.A
             self.loan(loan_money)
 
-        if self.supply > 0:
+        if self.Y > self.q:
             if self.p > self.model.schedule.avg_p:
                 self.p = max(self.p_min, self.p * (1-np.random.uniform(0,self.model.h_eta)))
             else:
                 self.Y = self.Y*(1-np.random.uniform(0,self.model.h_rho))
         else:
             if self.p > self.model.schedule.avg_p:
-                self.Y = self.Y*(1-np.random.uniform(0,self.model.h_rho))
+                self.Y = self.Y*(1+np.random.uniform(0,self.model.h_rho))
             else:
                 self.p = self.p * (1 + np.random.uniform(0,self.model.h_eta))
 
@@ -96,6 +96,9 @@ class Firm(Agent):
 
         self.alpha = self.alpha + np.random.exponential(self.sigma)
         staff_demand = int(self.Y / self.alpha)
+        # print ('yield:'+str(self.Y))
+        # print ('alpha:'+str(self.alpha))
+        # print ('demand:'+str(staff_demand))
 
         if loan_money and staff_demand < len(self.staff):
             self.fire(len(self.staff)- staff_demand)
@@ -105,9 +108,9 @@ class Firm(Agent):
         if len(self.staff_apply) == 0:
             pass
         elif len(self.staff_apply) >= self.vacancy:
-            self.vacancy = 0
             for candi in self.staff_apply[:self.vacancy]:
                 self.hire(candi)
+            self.vacancy = 0
         else:
             self.vacancy -= len(self.staff_apply)
             for candi in self.staff_apply:
@@ -144,6 +147,7 @@ class Firm(Agent):
                 staff.employed = False
                 staff.w = 0
                 self.staff.remove(staff)
+        # print ('s'+str(len(self.staff)))
         return len(self.staff)
 
     def fire(self,fire_num):
@@ -162,4 +166,5 @@ class Firm(Agent):
         candi.employed = True
         candi.contract = np.random.randint(12,120)
         candi.w = self.w
+        self.staff_apply.remove(candi)
         self.staff.append(candi)

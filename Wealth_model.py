@@ -11,6 +11,8 @@ def gini(model):
     agent_wealths = [ indi.f+indi.s for indi in model.schedule.individuals]
     x = sorted(agent_wealths)
     N = model.indi_num
+    if sum(x) == 0:
+        return 0
     B = sum( xi * (N-i) for i,xi in enumerate(x) ) / (N*sum(x))
     return (1 + (1/N) - 2*B)
 
@@ -28,7 +30,7 @@ class WealthModel(Model):
         self.r_saving = 0.03/12
         # self.firm_sort = range(firm_num)
         self.M = 5
-        self.cost_ratio = 0.2
+        self.cost_ratio = 0.1
         self.min_cost = 500
         self.c = 0.02
         # self.avg_p = 
@@ -54,15 +56,18 @@ class WealthModel(Model):
             # Add the agent to a random grid cell
 
         self.datacollector = MyCollector(
-            model_reporters={"Unemploy":unemploy_rate},
+            model_reporters={"Gini":gini,"Unemploy":unemploy_rate},
             agent_reporters={"Wealth": lambda a: a.f+a.s})
 
     def step(self):
         self.datacollector.collect(self)
         self.schedule.step()
         # self.show_vacancy()
-        self.show_wage()
+        # self.show_wage()
         # self.show_saving()
+        # self.show_employed()
+        # self.show_staff_apply()
+        self.show_consume()
 
     def show_wage(self):
         wages = [firm.w for firm in self.schedule.firms]
@@ -80,7 +85,19 @@ class WealthModel(Model):
         vacancy = [firm.vacancy for firm in self.schedule.firms]
         print (vacancy)
 
+    def show_employed(self):
+        employed = [indi.employed for indi in self.schedule.individuals]
+        print (employed)
+
+    def show_staff_apply(self):
+        staff_apply = [indi.unique_id for indi in self.schedule.firms[3].staff_apply]
+        print (staff_apply)
+    def show_consume(self):
+        consume = [indi.c for indi in self.schedule.individuals]
+        print(consume)
+
+
 model = WealthModel(indi_num=500,firm_num=10)
-for i in range(80):
+for i in range(200):
     print(i)
     model.step()
