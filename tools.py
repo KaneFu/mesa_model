@@ -36,18 +36,40 @@ class MyScheduler:
             # indi.step()
             consume = indi.c
             indi.contract -= 1
-            while pointer<len(self.firms) and (self.firms[self.ps_sorted[pointer]].supply > 0 and consume>0):
-                consume_num = int(consume / self.firms[self.ps_sorted[pointer]].p)
-                if self.firms[self.ps_sorted[pointer]].supply <= consume_num:
-                    self.firms[self.ps_sorted[pointer]].supply = 0
-                    self.firms[self.ps_sorted[pointer]].q += consume_num
-                    consume -= consume_num*self.firms[self.ps_sorted[pointer]].p
-                    pointer+=1
+            if indi.employed:
+                indi.ability +=0.1
+            while True:
+                pos = abs(np.random.normal(0,len(self.firms)))
+                pos = int(min(np.floor(pos),len(self.firms)-1))
+                consume_num = consume / self.firms[self.ps_sorted[pos]].p
+                ##选择哪个公司消费
+                if self.firms[self.ps_sorted[pos]].supply > consume_num:
+                    self.firms[self.ps_sorted[pos]].supply -= consume_num
+                    self.firms[self.ps_sorted[pos]].q += consume_num
+                    break
                 else:
-                    self.firms[self.ps_sorted[pointer]].supply -= consume_num
-                    self.firms[self.ps_sorted[pointer]].q += consume_num
-                    consume = 0
+                    self.firms[self.ps_sorted[pos]].q += self.firms[self.ps_sorted[pos]].supply
+                    self.firms[self.ps_sorted[pos]].supply = 0
+                    consume -= self.firms[self.ps_sorted[pos]].supply*self.firms[self.ps_sorted[pos]].p
+                if np.sum([firm.supply for firm in self.firms]) == 0:
+                    break
             indi.step()
+
+
+            # while pointer<len(self.firms) and (self.firms[self.ps_sorted[pointer]].supply > 0 and consume>0):
+            #     consume_num = int(consume / self.firms[self.ps_sorted[pointer]].p)
+            #     if self.firms[self.ps_sorted[pointer]].supply <= consume_num:
+            #         self.firms[self.ps_sorted[pointer]].supply = 0
+            #         self.firms[self.ps_sorted[pointer]].q += consume_num
+            #         consume -= consume_num*self.firms[self.ps_sorted[pointer]].p
+            #         pointer+=1
+            #     else:
+            #         self.firms[self.ps_sorted[pointer]].supply -= consume_num
+            #         self.firms[self.ps_sorted[pointer]].q += consume_num
+            #         consume = 0
+            
+
+        self.model.show_q()
         for firm in self.firms:
             firm.step()
 

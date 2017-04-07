@@ -26,21 +26,23 @@ class WealthModel(Model):
         self.firm_num = firm_num
         self.schedule = MyScheduler(self)
         self.y = 0.02
-        self.square = 0.01
+        self.square = 0.02
         self.r_saving = 0.03/12
         # self.firm_sort = range(firm_num)
         self.M = 5
-        self.cost_ratio = 0.1
+        self.h_cost = 0.5
         self.min_cost = 500
-        self.c = 0.02
+        self.firm_expense = 0.001
         # self.avg_p = 
-        self.h_eta = 0.15
-        self.h_rho = 0.2
-        self.h_xi = 0.1
+        self.h_eta = 0.05  ##涨价格
+        self.h_rho = 0.1  ##涨生产量
+        self.h_xi = 0.01  ##涨工资
         self.r_bar = 0.04/12
         self.phi = 1.5
         self.debt_r_max = 0.07/12
         self.var_phi = 0.8
+        self.labor_trans = 0.00001  #每投入十万元能多生产1个
+        self.cost_trans = 0.0005 #每投入一万元减少5块钱成本
         
         for i in range(self.firm_num):
             firm = Firm(i, self)
@@ -52,7 +54,6 @@ class WealthModel(Model):
             firm = random.sample(self.schedule.firms,1)[0]
             indi.firm = firm
             firm.staff.append(indi)
-
             # Add the agent to a random grid cell
 
         self.datacollector = MyCollector(
@@ -61,17 +62,65 @@ class WealthModel(Model):
 
     def step(self):
         self.datacollector.collect(self)
-        self.schedule.step()
         # self.show_vacancy()
         # self.show_wage()
+        self.show_yield()
+        # self.show_alpha()
+        self.show_ps()
+        # self.show_q()
+        # self.show_profit()
+        # self.show_debt()
+        # self.show_staff_needed()
+
+        # self.show_employ_info()
         # self.show_saving()
-        # self.show_employed()
+        # self.show_finance()
+        self.show_employed()
         # self.show_staff_apply()
-        self.show_consume()
+        # self.show_consume()
+        self.schedule.step()
+
+    def show_staff_needed(self):
+        needed = [int(firm.Y/firm.alpha) for firm in self.schedule.firms]
+        print(needed,np.sum(needed))
+
+    def show_debt(self):
+        debts = [firm.debt for firm in self.schedule.firms]
+        print("debt : ",debts)
+
+    def show_profit(self):
+        profits = [firm.pi for firm in self.schedule.firms]
+        print(profits)
+
+    def show_ps(self):
+        ps = [firm.p for firm in self.schedule.firms]
+        print ("price is: ",ps,np.mean(ps))
+
+    def show_q(self):
+        qs = [firm.q for firm in self.schedule.firms]
+        print("quantity : ",qs,np.sum(qs))
+
+    def show_employ_info(self):
+        # for firm in self.schedule.firms:
+        #     print([indi.unique_id for indi in firm.staff],len(firm.staff))
+        staffs = [len(firm.staff) for firm in self.schedule.firms]
+        print("employ info: ",staffs,np.sum(staffs))
+
+    def show_alpha(self):
+        alphas = [firm.alpha for firm in self.schedule.firms]
+        print(alphas)
 
     def show_wage(self):
         wages = [firm.w for firm in self.schedule.firms]
         print (wages)
+
+    def show_yield(self):
+        yield_num = [firm.Y for firm in self.schedule.firms]
+        print("yield num: ",yield_num,np.sum(yield_num))
+
+    def show_vacancy(self):
+        vacancy = [firm.vacancy for firm in self.schedule.firms]
+        print (vacancy)
 
     def show_saving(self):
         wealths = [indi.s for indi in self.schedule.individuals]
@@ -81,23 +130,20 @@ class WealthModel(Model):
         finance = [indi.f for indi in self.schedule.individuals]
         print (finance)
 
-    def show_vacancy(self):
-        vacancy = [firm.vacancy for firm in self.schedule.firms]
-        print (vacancy)
-
     def show_employed(self):
         employed = [indi.employed for indi in self.schedule.individuals]
-        print (employed)
+        print (1-np.sum(employed)/len(employed))
 
     def show_staff_apply(self):
         staff_apply = [indi.unique_id for indi in self.schedule.firms[3].staff_apply]
         print (staff_apply)
+
     def show_consume(self):
         consume = [indi.c for indi in self.schedule.individuals]
-        print(consume)
+        print("comsume: "+str(np.sum(consume)/self.schedule.avg_p))
 
 
 model = WealthModel(indi_num=500,firm_num=10)
-for i in range(200):
-    print(i)
+for i in range(300):
+    print(">>>>>>>>>>>>>>>>>>>>>>>>step: "+str(i))
     model.step()
